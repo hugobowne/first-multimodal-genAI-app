@@ -33,24 +33,32 @@ async def background_tasks(placeholder):
             break
 
 async def main():
+
     if 'text' not in st.session_state:
         init_session_state()
+
     left_column, right_column = st.columns(2)
     left_column.title("User input")
     right_column.title("AI generations")
-    left_column.subheader("Text generation")
     placeholder = right_column.empty()
-    if st.session_state["text"] is not None:
-        show_quick_reset_option(left_column)
-    st.session_state.text_gen_sys_prompt = left_column.text_area("System prompt", DEFAULT_TEXT_GEN_SYSTEM_PROMPT)
-    model = left_column.selectbox("Model", ["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"])
+
     if st.session_state["text"] is None:
+        left_column.subheader("Text generation")
+        st.session_state.init_model = left_column.selectbox("Initial text reply model", ["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"])
+        st.session_state.text_gen_sys_prompt = left_column.text_area("System prompt", DEFAULT_TEXT_GEN_SYSTEM_PROMPT)
         set_users_initial_prompt(left_column)
-    _generate_text = partial(generate_text, st.session_state["text"], model)
+    else:
+        show_quick_reset_option(left_column)
+        left_column.subheader("Pick your poison")
+        st.session_state.image_model = left_column.selectbox("Image model", REPLICATE_IMAGE_MODEL_ID_LS)
+        st.session_state.video_model = left_column.selectbox("Video model", REPLICATE_VIDEO_MODEL_ID_LS)
+
+    _generate_text = partial(generate_text, st.session_state["text"], st.session_state.init_model)
+
     if st.session_state["text"]:
         display_user_info(right_column)
         display_llm_info(right_column, _generate_text)
-        if left_column.button('Run all'):
+        if left_column.button('Run all tasks concurrently'):
             st.session_state.tasks = [
                 asyncio.create_task(text_to_image(st.session_state["text"], st.session_state['negative_prompt'], src="user")),
                 asyncio.create_task(text_to_image(st.session_state["text_gen_stream_resp"],st.session_state['negative_prompt'], src="llm")),

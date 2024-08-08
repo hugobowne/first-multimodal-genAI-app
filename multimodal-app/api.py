@@ -92,17 +92,31 @@ async def text_to_audio(text: str, src: str) -> bytes:
 
 async def text_to_image(text: str, negative_prompt: str, src: str = "human") -> str:
     st.session_state["running_image_job"] = True
-    input = {
-        "seed": 42,
-        "prompt": text,
-        "aspect_ratio": "3:2",
-        "output_quality": 79,
-        "negative_prompt": negative_prompt,
-    }
+    if st.session_state.image_model.startswith('stability-ai/stable-diffusion-3'):
+        input = {
+            "seed": 42,
+            "prompt": text,
+            "aspect_ratio": "3:2",
+            "output_quality": 79,
+            "negative_prompt": negative_prompt,
+        }
+    elif st.session_state.image_model.startswith('black-forest-labs/flux-dev'):
+        input = {
+            "prompt": text,
+            "guidance": 3.5,
+            "num_outputs": 1,
+            "aspect_ratio": "1:1",
+            "output_format": "webp",
+            "output_quality": 80,
+            "prompt_strength": 0.8
+        }
+    else:
+        raise ValueError(f'Unsupported video model/version type {st.session_state.image_model}.')
+    
     print(f"[DEBUG] Generating image...")
     t0 = time.time()
     loop = asyncio.get_event_loop()
-    output = await loop.run_in_executor(None, replicate.run, REPLICATE_IMAGE_MODEL_ID, input)
+    output = await loop.run_in_executor(None, replicate.run, st.session_state.image_model, input)
     tf = time.time()
     print(f"[DEBUG] text_to_image request took {tf - t0:.2f} seconds")
 
@@ -113,9 +127,9 @@ async def text_to_image(text: str, negative_prompt: str, src: str = "human") -> 
             "negative_prompt": negative_prompt,
             "image_url": image_url,
             "date": pd.Timestamp.now(),
-            "model": REPLICATE_IMAGE_MODEL_ID,
+            "model": st.session_state.image_model,
             "provider": "Replicate",
-            "client_time": tf - t0,
+            "client_time": tf - t0
         }
         df = pd.DataFrame(data, index=[0])
         st.session_state["image_gen_evals_df"] = pd.concat(
@@ -130,20 +144,27 @@ async def text_to_image(text: str, negative_prompt: str, src: str = "human") -> 
         st.session_state["running_image_job"] = False
         raise Exception("Text-to-image model did not return a valid URL.")
 
-async def text_to_video(text: str, max_frames: int = 100, sampler: str = "klms", src: str = "user") -> str:
-    st.session_state["running_video_job"] = True
-    input = {
-        "sampler": sampler,
-        "max_frames": max_frames,
-        "animation_prompts": text
-    }
+async def text_to_video(text: str, src: str = "user") -> str:
+    st.session_state.running_video_job = True
+    if st.session_state.video_model.startswith('lucataco/hotshot-xl'):
+        input = {
+            "prompt": text,
+            "mp4": True
+        }
+    elif st.session_state.video_model.startswith('deforum/deforum_stable_diffusion'):
+        input = {
+            "animation_prompts": text,
+            "sampler": "klms",
+            "max_frames": 100,
+        }
+    else:
+        raise ValueError(f'Unsupported video model/version type {st.session_state.video_model}.')
     t0 = time.time()
     print("[DEBUG] Generating video...")
     loop = asyncio.get_event_loop()
-    output = await loop.run_in_executor(None, replicate.run, REPLICATE_VIDEO_MODEL_ID, input)
+    output = await loop.run_in_executor(None, replicate.run, st.session_state.video_model, input)
     tf = time.time()
     print("[DEBUG] Video generation complete. %s" % output)
-
     if output and isinstance(output, list) and len(output) > 0:
         video_url = output[0]
     elif output and isinstance(output, str):
@@ -152,7 +173,7 @@ async def text_to_video(text: str, max_frames: int = 100, sampler: str = "klms",
         "text": text,
         "video_url": video_url,
         "date": pd.Timestamp.now(),
-        "model": REPLICATE_VIDEO_MODEL_ID,
+        "model": st.session_state.video_model,
         "provider": "Replicate",
         "client_time": tf - t0,
     }

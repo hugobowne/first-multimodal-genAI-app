@@ -7,13 +7,13 @@ from constants import *
 def set_users_initial_prompt(col_handler):
     text = col_handler.chat_input("Say something")
     st.session_state["text"] = text
-    st.session_state["user_init_audio_bytes"] = audio_recorder(
+    st.session_state.user_init_audio_bytes = audio_recorder(
         recording_color="#e8b62c",
         neutral_color="#6aa36f",
         icon_name="microphone",
         icon_size="2x",
     )
-    if "user_init_audio_bytes" in st.session_state:
+    if "user_init_audio_bytes" in st.session_state and st.session_state.user_init_audio_bytes is not None:
         col_handler.audio(data=st.session_state["user_init_audio_bytes"], format="audio/wav")
         if col_handler.button("Transcribe"):
             transcription = transcribe_audio(st.session_state["user_init_audio_bytes"])
@@ -60,7 +60,7 @@ def display_audio_section(col_handler):
 def display_image_section(col_handler):
     col_handler.subheader("Text-to-image generation")
     col_handler.write(
-        "Click the buttons to generate an image using {}".format(REPLICATE_IMAGE_MODEL_ID)
+        "Click the buttons to generate an image using {}".format(st.session_state.image_model)
     )
     negative_prompt = col_handler.text_area("Negative prompt", st.session_state['negative_prompt'])
     st.session_state['negative_prompt'] = negative_prompt
@@ -76,7 +76,7 @@ def display_image_section(col_handler):
 def display_video_section(col_handler):
     col_handler.subheader("Text-to-video generation")
     col_handler.write(
-        "Click the buttons to generate a video using {}".format(REPLICATE_VIDEO_MODEL_ID)
+        "Click the buttons to generate a video using {}".format(st.session_state.video_model)
     )
     if not st.session_state['running_audio_job'] or st.session_state['running_image_job'] or st.session_state['running_video_job']:
         if col_handler.button("Generate video for user prompt"):
