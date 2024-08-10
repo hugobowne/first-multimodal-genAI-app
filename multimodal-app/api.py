@@ -8,12 +8,18 @@ import replicate
 import pandas as pd
 import streamlit as st
 from openai import OpenAI
+from groq import Groq
 
 from constants import *
 
 def generate_text(text: str, model: str) -> str:
     text_gen_response = ""
-    client = OpenAI()
+
+    if st.session_state.init_model_provider == "groq":
+        client = Groq()
+    elif st.session_state.init_model_provider == 'openai':
+        client = OpenAI()
+    
     t0 = time.time()
     completion = client.chat.completions.create(
         model=model,
@@ -21,15 +27,14 @@ def generate_text(text: str, model: str) -> str:
             {"role": "system", "content": st.session_state.text_gen_sys_prompt},
             {"role": "user", "content": text},
         ],
-        stream=True,
-        stream_options={"include_usage": True}
+        stream=True
     )
     for chunk in completion:
         if chunk.usage is None and chunk.choices[0].delta.content is not None:
             print(f"[DEBUG] Regular chunk: {chunk}")
             text_gen_response += chunk.choices[0].delta.content
             yield chunk.choices[0].delta.content
-        elif chunk.usage is not None:
+        else:
             print(f"[DEBUG] Final chunk: {chunk}")
             data = {
                 "prompt": text,
@@ -37,17 +42,12 @@ def generate_text(text: str, model: str) -> str:
                 "response": text_gen_response,
                 "model": model,
                 "client_time": time.time() - t0,
-                "date": pd.Timestamp.now(),
-                "prompt_tokens": chunk.usage.prompt_tokens,
-                "completion_tokens": chunk.usage.completion_tokens
+                "date": pd.Timestamp.now()
             }
             df = pd.DataFrame(data, index=[0])
             st.session_state["text_gen_evals_df"] = pd.concat(
                 [st.session_state["text_gen_evals_df"], df], ignore_index=True
-            )
-        else:
-            print(f"[DEBUG] Empty chunk: {chunk}")
-            yield ""    
+            )  
 
 async def text_to_audio(text: str, src: str) -> bytes:
     st.session_state["running_audio_job"] = True
