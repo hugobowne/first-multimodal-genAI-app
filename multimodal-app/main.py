@@ -1,4 +1,5 @@
 from functools import partial
+import os
 import asyncio
 import streamlit as st
 
@@ -44,7 +45,11 @@ async def main():
 
     if st.session_state["text"] is None:
         left_column.subheader("Text generation")
-        st.session_state.init_model = left_column.selectbox("Initial text reply model", ["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"])
+        openai_model_ls = ["openai:gpt-3.5-turbo", "openai:gpt-4o-mini", "openai:gpt-4o"]
+        groq_model_ls = ["groq:llama-3.1-70b-versatile", "groq:mixtral-8x7b-32768", "groq:gemma2-9b-it"]
+        model_choice = left_column.selectbox("Initial text reply model", groq_model_ls + openai_model_ls)
+        model_choice_ls = model_choice.split(':')
+        st.session_state.init_model_provider, st.session_state.init_model = model_choice_ls[0], model_choice_ls[1]
         st.session_state.text_gen_sys_prompt = left_column.text_area("System prompt", DEFAULT_TEXT_GEN_SYSTEM_PROMPT)
         set_users_initial_prompt(left_column)
     else:
