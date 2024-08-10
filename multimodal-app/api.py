@@ -190,15 +190,21 @@ async def text_to_video(text: str, src: str = "user") -> str:
 
 def transcribe_audio(audio_data):
     try:
-        client = OpenAI()
-        print("[DEBUG] Transcribing audio with openai/whisper-1...")
+        if st.session_state.init_model_provider == "groq":
+            client = Groq()
+            model_wh = "whisper-large-v3"
+            print("[DEBUG] Transcribing audio with groq/whisper-1...")
+        elif st.session_state.init_model_provider == 'openai':
+            client = OpenAI()
+            model_wh = "whisper-1"
+            print("[DEBUG] Transcribing audio with openai/whisper-1...")
         file_like = io.BytesIO(audio_data)
         file_like.name = "audio.wav"  
         file_like.seek(0)
 
         t0 = time.time()
         transcription = client.audio.transcriptions.create(
-            model="whisper-1", 
+            model=model_wh, 
             file=file_like, 
             response_format="verbose_json"
         )
