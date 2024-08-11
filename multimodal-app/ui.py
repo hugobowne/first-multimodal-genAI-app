@@ -47,7 +47,7 @@ def display_llm_info(col_handler, f):
 
 def display_audio_section(col_handler):
     col_handler.subheader("Text-to-audio generation")
-    col_handler.write(f"Click the buttons to generate audio using {HF_BARK_ENDPOINT}")
+    col_handler.write(f"Click the buttons to generate audio using Suno Bark")
     if not st.session_state['running_audio_job'] or st.session_state['running_image_job'] or st.session_state['running_video_job']:
         if col_handler.button("Generate audio for user prompt"):
             return asyncio.create_task(text_to_audio(st.session_state["text"], "user"))
