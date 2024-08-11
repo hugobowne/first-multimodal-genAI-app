@@ -48,6 +48,7 @@ streamlit-webrtc = "^0.47.7"
 audio-recorder-streamlit = "^0.0.10"
 scipy = "^1.14.0"
 librosa = "^0.10.2.post1"
+groq = "^0.9.0"
 
 
 [build-system]
