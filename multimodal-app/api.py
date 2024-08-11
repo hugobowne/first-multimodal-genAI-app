@@ -49,46 +49,75 @@ def generate_text(text: str, model: str) -> str:
                 [st.session_state["text_gen_evals_df"], df], ignore_index=True
             )  
 
+
+# Access the API key from secrets
+REPLICATE_API_KEY = st.secrets["REPLICATE_API_TOKEN"]
+client = replicate.Client(api_token=REPLICATE_API_KEY)
+
+
 async def text_to_audio(text: str, src: str) -> bytes:
     st.session_state["running_audio_job"] = True
     st.session_state[f"{src}_audio_bytes"] = None
 
     print(f"[DEBUG] Generating audio...")
     t0 = time.time()
-    async with aiohttp.ClientSession() as session:
-        async with session.post(
-            HF_BARK_ENDPOINT, headers=bark_api_headers, json={"inputs": text}
-        ) as response:
-            tf = time.time()
-            print(f"[DEBUG] text_to_audio request took {tf - t0:.2f} seconds")
-            if response.status == 200:
-                out_dir = os.path.join(AUDIO_DATA_SINK, src)
-                if not os.path.exists(out_dir):
-                    os.makedirs(out_dir)
-                out_path = os.path.join(out_dir, f"{uuid.uuid4().hex}_audio.wav")
-                with open(out_path, "wb") as f:
-                    f.write(await response.read())
-                data = {
-                    "text": text,
-                    "date": pd.Timestamp.now(),
-                    "model": "suno/bark",
-                    "provider": "Hugging Face",
-                    "client_time": tf - t0,
-                }
-                df = pd.DataFrame(data, index=[0])
-                st.session_state["audio_gen_evals_df"] = pd.concat(
-                    [st.session_state["audio_gen_evals_df"], df], ignore_index=True
-                )
-                if src == 'user':
-                    st.session_state["user_audio_bytes"] = await response.read()
-                elif src == 'llm':
-                    st.session_state["llm_audio_bytes"] = await response.read()
-                st.session_state["running_audio_job"] = False
-            else:
-                st.session_state["running_audio_job"] = False
-                raise Exception(
-                    f"Request failed with status code {response.status}: {await response.text()}"
-                )
+
+    # Define the input parameters for the model
+    input_params = {
+        "prompt": text,
+        "text_temp": 0.7,
+        "output_full": False,
+        "waveform_temp": 0.7,
+        "history_prompt": "announcer",
+        # "duration": 30  # Uncomment if you want to set a specific duration
+    }
+
+    try:
+        # Run the model using Replicate API
+        output = client.run(
+            "suno-ai/bark:b76242b40d67c76ab6742e987628a2a9ac019e11d56ab96c4e91ce03b79b2787",
+            input=input_params
+        )
+        tf = time.time()
+        print(f"[DEBUG] text_to_audio request took {tf - t0:.2f} seconds")
+        print(f"[DEBUG] Replicate API output: {output}")
+
+        # Fetch the audio from the returned URL
+        audio_url = output['audio_out']
+        async with aiohttp.ClientSession() as session:
+            async with session.get(audio_url) as audio_response:
+                audio_bytes = await audio_response.read()
+
+        out_dir = os.path.join(AUDIO_DATA_SINK, src)
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+        out_path = os.path.join(out_dir, f"{uuid.uuid4().hex}_audio.wav")
+
+        with open(out_path, "wb") as f:
+            f.write(audio_bytes)
+
+        data = {
+            "text": text,
+            "date": pd.Timestamp.now(),
+            "model": "suno-ai/bark",
+            "provider": "Replicate",
+            "client_time": tf - t0,
+        }
+        df = pd.DataFrame(data, index=[0])
+        st.session_state["audio_gen_evals_df"] = pd.concat(
+            [st.session_state["audio_gen_evals_df"], df], ignore_index=True
+        )
+
+        if src == 'user':
+            st.session_state["user_audio_bytes"] = audio_bytes
+        elif src == 'llm':
+            st.session_state["llm_audio_bytes"] = audio_bytes
+        
+        st.session_state["running_audio_job"] = False
+
+    except Exception as e:
+        st.session_state["running_audio_job"] = False
+        raise Exception(f"Request failed: {e}")
 
 async def text_to_image(text: str, negative_prompt: str, src: str = "human") -> str:
     st.session_state["running_image_job"] = True

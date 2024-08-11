@@ -6,8 +6,8 @@ DEFAULT_TEXT_GEN_SYSTEM_PROMPT = (
 DEFAULT_IMAGE_GEN_NEGATIVE_PROMPT = "Sad, dark, and gloomy image."
 
 # Set up API URLs and headers
-HF_BARK_ENDPOINT = "https://api-inference.huggingface.co/models/suno/bark"
-bark_api_headers = {"Authorization": f"Bearer {os.environ['HF_API_KEY']}"}
+# HF_BARK_ENDPOINT = "https://api-inference.huggingface.co/models/suno/bark"
+# bark_api_headers = {"Authorization": f"Bearer {os.environ['HF_API_KEY']}"}
 
 REPLICATE_IMAGE_MODEL_ID_LS = [
      "black-forest-labs/flux-dev",
