@@ -21,15 +21,15 @@ Before you begin, make sure you have the following:
 - If you exceed the free tier, you may need to purchase additional usage.
 - For the latest information on GitHub Codespaces pricing and usage limits, please check the [official GitHub documentation](https://docs.github.com/en/billing/managing-billing-for-github-codespaces/about-billing-for-github-codespaces).
 
-**Note for Workshop Participants:** If you are taking this workshop at a conference or other event, please check with your instructors or teachers to see if they are providing the API keys for you.
+**Note for Workshop Participants:** If you are taking this workshop at a conference or other event, please check with your instructors or teachers to see if they are providing the API keys for you. If you're at ODSC APAC (August, 2024), [complete this form](https://forms.gle/AcaY1dki6Gxpgd4y7) and Hugo will send you credits (expire Aug 20).
 
 ## Setting Up the Environment
 
-To get up and running, you can watch the video below and/or follow the instructions:
+To get up and running, you can watch the video below and/or follow the instructions (instructions at around 1:50 after motivating demo):
 
 
 
-https://github.com/user-attachments/assets/a311c3fd-628b-4c14-aafa-dfeaf8a52885
+https://github.com/user-attachments/assets/342b5ee3-c067-4407-9d51-96fab6488863
 
 
 
@@ -105,10 +105,6 @@ If you encounter any issues:
 ## Contributing
 
 We welcome contributions to improve this project! Please feel free to submit issues or pull requests.
-
-## License
-
-[Insert appropriate license information here]
 
 ---
 
