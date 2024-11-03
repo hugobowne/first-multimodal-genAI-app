@@ -21,7 +21,7 @@ Before you begin, make sure you have the following:
 - If you exceed the free tier, you may need to purchase additional usage.
 - For the latest information on GitHub Codespaces pricing and usage limits, please check the [official GitHub documentation](https://docs.github.com/en/billing/managing-billing-for-github-codespaces/about-billing-for-github-codespaces).
 
-**Note for Workshop Participants:** If you are taking this workshop at a conference or other event, please check with your instructors or teachers to see if they are providing the API keys for you. If you're at ODSC APAC (August, 2024), [complete this form](https://forms.gle/AcaY1dki6Gxpgd4y7) and Hugo will send you credits (expire Aug 20).
+**Note for Workshop Participants:** If you are taking this workshop at a conference or other event, please check with your instructors or teachers to see if they are providing the API keys for you.
 
 ## Setting Up the Environment
 
