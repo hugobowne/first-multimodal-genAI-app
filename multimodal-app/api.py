@@ -74,16 +74,26 @@ async def text_to_audio(text: str, src: str) -> bytes:
 
     try:
         # Run the model using Replicate API
+        # Create a Replicate client instance with the API token
+
+
         output = client.run(
-            "suno-ai/bark:b76242b40d67c76ab6742e987628a2a9ac019e11d56ab96c4e91ce03b79b2787",
-            input=input_params
+            "x-lance/f5-tts:87faf6dd7a692dd82043f662e76369cab126a2cf1937e25a9d41e0b834fd230e",
+            input={
+                "gen_text": text,
+                "ref_text": "never underestimate the power of the scout's code",
+                "ref_audio": "https://replicate.delivery/pbxt/LnHEJTVWhjLcpGQJTBralyztLwl8diaLyHjP2a1KXJ8dxVWv/Teemo_Original_Taunt.ogg",
+                "remove_silence": True,
+                "custom_split_words": ""
+            }
         )
+
         tf = time.time()
         print(f"[DEBUG] text_to_audio request took {tf - t0:.2f} seconds")
         print(f"[DEBUG] Replicate API output: {output}")
 
         # Fetch the audio from the returned URL
-        audio_url = output['audio_out']
+        audio_url = output
         async with aiohttp.ClientSession() as session:
             async with session.get(audio_url) as audio_response:
                 audio_bytes = await audio_response.read()
